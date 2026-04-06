@@ -22,7 +22,7 @@ class TestPredictEndpoint:
         with patch("src.api.app.model", mock_model), \
              patch("src.api.app.processor", mock_processor), \
              patch("src.storage.database.init_db"), \
-             patch("src.api.routes.predict.log_prediction"):
+             patch("src.storage.database.log_prediction"):
             from src.api.app import app
             client = TestClient(app)
 
@@ -37,7 +37,7 @@ class TestPredictEndpoint:
             assert "label_id" in data
             assert "confidence" in data
             assert "probabilities" in data
-            assert data["label"] == "technical"
+            assert data["label"] == "technical"  # label_id 1 = technical
             assert data["confidence"] == 0.95
 
     def test_predict_requires_text(self):

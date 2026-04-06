@@ -42,8 +42,8 @@ class TestDeploymentAgent:
 
     def test_no_deployment_when_no_retraining(self):
         """Test agent skips deployment when no retraining occurred."""
-        with patch("src.agents.deployment_agent.llm") as mock_llm:
-            mock_llm.invoke.return_value = MagicMock(content="No action needed.")
+        with patch("src.agents.deployment_agent._get_llm") as mock_llm:
+            mock_llm.return_value.invoke.return_value = MagicMock(content="No action needed.")
 
             state = _base_state(retraining_triggered=False)
             result = deployment_agent(state)
@@ -55,8 +55,8 @@ class TestDeploymentAgent:
     @patch("src.agents.deployment_agent.Path")
     def test_deploys_when_new_model_is_better(self, mock_path_cls, mock_shutil):
         """Test agent deploys when retrained model is better than current."""
-        with patch("src.agents.deployment_agent.llm") as mock_llm:
-            mock_llm.invoke.return_value = MagicMock(content="Model deployed successfully.")
+        with patch("src.agents.deployment_agent._get_llm") as mock_llm:
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Model deployed successfully.")
 
             with patch("src.agents.deployment_agent.PerformanceTracker") as mock_tracker_cls:
                 mock_tracker = MagicMock()
@@ -86,8 +86,8 @@ class TestDeploymentAgent:
 
     def test_no_deploy_when_new_model_not_better(self):
         """Test agent skips deploy when new model doesn't meet criteria."""
-        with patch("src.agents.deployment_agent.llm") as mock_llm:
-            mock_llm.invoke.return_value = MagicMock(content="Not deploying — SKIP.")
+        with patch("src.agents.deployment_agent._get_llm") as mock_llm:
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Not deploying — SKIP.")
 
             state = _base_state(
                 retraining_triggered=True,
@@ -103,8 +103,8 @@ class TestDeploymentAgent:
 
     def test_error_handling_in_deployment(self):
         """Test agent handles errors gracefully during deployment."""
-        with patch("src.agents.deployment_agent.llm") as mock_llm:
-            mock_llm.invoke.return_value = MagicMock(content="Error occurred.")
+        with patch("src.agents.deployment_agent._get_llm") as mock_llm:
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Error occurred.")
 
             with patch("src.agents.deployment_agent.Path") as mock_path_cls:
                 mock_path_cls.side_effect = Exception("Disk full")
@@ -124,19 +124,19 @@ class TestDeploymentAgent:
 
     def test_generate_final_summary_calls_llm(self):
         """Test that _generate_final_summary uses LLM."""
-        with patch("src.agents.deployment_agent.llm") as mock_llm:
-            mock_llm.invoke.return_value = MagicMock(content="Pipeline completed. No drift. Model healthy.")
+        with patch("src.agents.deployment_agent._get_llm") as mock_llm:
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Pipeline completed. No drift. Model healthy.")
 
             state = _base_state()
             _generate_final_summary(state)
 
             assert state["final_summary"] == "Pipeline completed. No drift. Model healthy."
-            mock_llm.invoke.assert_called_once()
+            mock_llm.return_value.invoke.assert_called_once()
 
     def test_errors_accumulate(self):
         """Test that new errors append to existing errors list."""
-        with patch("src.agents.deployment_agent.llm") as mock_llm:
-            mock_llm.invoke.return_value = MagicMock(content="Summary")
+        with patch("src.agents.deployment_agent._get_llm") as mock_llm:
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Summary")
 
             with patch("src.agents.deployment_agent.Path") as mock_path_cls:
                 mock_path_cls.side_effect = Exception("Something broke")

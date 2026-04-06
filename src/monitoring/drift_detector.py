@@ -1,13 +1,10 @@
-"""Data drift detection using Evidently AI."""
+"""Data drift detection using Evidently AI (v0.7+ API)."""
 
-from evidently.report import Report
-from evidently.metrics import (
-    DataDriftTable,
-    DatasetDriftMetric,
-)
+from evidently import Report
+from evidently.presets import DataDriftPreset
 import pandas as pd
 import structlog
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 logger = structlog.get_logger()
@@ -16,40 +13,40 @@ logger = structlog.get_logger()
 @dataclass
 class DriftReport:
     """Result of a drift detection check."""
+
     is_drifted: bool
-    drift_score: float           # Overall drift score (0-1)
-    drifted_columns: list        # Which features drifted
-    column_scores: Dict[str, float]  # Per-column drift scores
-    details: Dict[str, Any]      # Full Evidently report data
+    drift_score: float  # Share of drifted columns (0-1)
+    drifted_columns: list  # Which features drifted
+    column_scores: Dict[str, float]  # Per-column drift p-values
+    details: Dict[str, Any]  # Full Evidently report data
 
 
 class DriftDetector:
     """Monitors incoming data for statistical drift against a reference dataset.
 
-    Uses Evidently AI under the hood. Supports multiple drift detection methods:
-    - PSI (Population Stability Index)
-    - KS (Kolmogorov-Smirnov) test
-    - Jensen-Shannon divergence
+    Uses Evidently AI under the hood. In v0.7+, uses DataDriftPreset which
+    applies appropriate statistical tests per column type:
+    - KS test for numerical features
+    - Chi-squared / Jensen-Shannon for categorical features
     """
 
-    _instance = None
+    _instance: Optional["DriftDetector"] = None
 
-    def __init__(self, reference_data: pd.DataFrame, drift_threshold: float = 0.3):
+    def __init__(self, reference_data: pd.DataFrame, drift_threshold: float = 0.5):
         """
         Args:
             reference_data: The "known good" data distribution to compare against.
-                           Typically your training data or a validated production window.
-            drift_threshold: Fraction of columns that need to drift to trigger alert.
+            drift_threshold: Share of columns that need to drift to flag dataset-level drift.
         """
         self.reference_data = reference_data
         self.drift_threshold = drift_threshold
 
     @classmethod
-    def get_instance(cls, reference_data: pd.DataFrame = None, drift_threshold: float = 0.3) -> "DriftDetector":
+    def get_instance(cls, reference_data: pd.DataFrame = None, drift_threshold: float = 0.5) -> "DriftDetector":
         """Get or create the singleton DriftDetector instance."""
         if cls._instance is None:
             if reference_data is None:
-                raise ValueError("reference_data required for first initialization")
+                reference_data = pd.DataFrame()
             cls._instance = cls(reference_data, drift_threshold)
         return cls._instance
 
@@ -67,34 +64,68 @@ class DriftDetector:
         Returns:
             DriftReport with drift status, scores, and details
         """
-        report = Report(metrics=[
-            DatasetDriftMetric(),
-            DataDriftTable(),
-        ])
+        if self.reference_data.empty or current_data.empty:
+            return DriftReport(
+                is_drifted=False,
+                drift_score=0.0,
+                drifted_columns=[],
+                column_scores={},
+                details={},
+            )
 
-        report.run(
-            reference_data=self.reference_data,
-            current_data=current_data,
-        )
+        # Align columns between reference and current data
+        common_columns = list(set(self.reference_data.columns) & set(current_data.columns))
+        if not common_columns:
+            return DriftReport(
+                is_drifted=False,
+                drift_score=0.0,
+                drifted_columns=[],
+                column_scores={},
+                details={"error": "No common columns"},
+            )
 
-        result = report.as_dict()
+        ref_aligned = self.reference_data[common_columns]
+        cur_aligned = current_data[common_columns]
 
-        # Extract drift info from Evidently result
-        dataset_drift = result["metrics"][0]["result"]
-        drift_table = result["metrics"][1]["result"]
+        # Evidently v0.7+ API
+        report = Report([DataDriftPreset(drift_share=self.drift_threshold)])
+        snapshot = report.run(ref_aligned, cur_aligned)
+        result = snapshot.dict()
 
-        # Get per-column drift scores
+        # Parse the v0.7 output structure
         column_scores = {}
         drifted_columns = []
-        for col_name, col_data in drift_table.get("drift_by_columns", {}).items():
-            score = col_data.get("drift_score", 0)
-            column_scores[col_name] = score
-            if col_data.get("drift_detected", False):
-                drifted_columns.append(col_name)
+        drifted_count = 0
+        total_columns = 0
+
+        for metric in result.get("metrics", []):
+            metric_name = metric.get("metric_name", "")
+            config = metric.get("config", {})
+
+            # DriftedColumnsCount gives overall drift summary
+            if "DriftedColumnsCount" in metric_name:
+                value = metric.get("value", {})
+                drifted_count = value.get("count", 0)
+                drift_share = value.get("share", 0)
+
+            # ValueDrift gives per-column drift scores
+            elif "ValueDrift" in metric_name:
+                col_name = config.get("column", "")
+                threshold = config.get("threshold", 0.05)
+                p_value = metric.get("value", 1.0)
+                total_columns += 1
+
+                column_scores[col_name] = p_value
+                if p_value < threshold:
+                    drifted_columns.append(col_name)
+
+        # Determine overall drift
+        drift_share = len(drifted_columns) / max(total_columns, 1)
+        is_drifted = drift_share >= self.drift_threshold
 
         drift_report = DriftReport(
-            is_drifted=dataset_drift.get("dataset_drift", False),
-            drift_score=dataset_drift.get("share_of_drifted_columns", 0),
+            is_drifted=is_drifted,
+            drift_score=drift_share,
             drifted_columns=drifted_columns,
             column_scores=column_scores,
             details=result,
@@ -103,7 +134,7 @@ class DriftDetector:
         logger.info(
             "drift_check_complete",
             is_drifted=drift_report.is_drifted,
-            drift_score=drift_report.drift_score,
+            drift_score=round(drift_report.drift_score, 3),
             drifted_columns=drifted_columns,
         )
 

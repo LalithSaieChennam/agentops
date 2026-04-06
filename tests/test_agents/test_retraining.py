@@ -52,7 +52,7 @@ class TestRetrainingAgent:
         with patch("src.agents.retraining_agent.TicketDataProcessor") as mock_proc_cls, \
              patch("src.agents.retraining_agent.TicketClassifier") as mock_model_cls, \
              patch("src.agents.retraining_agent.Trainer") as mock_trainer_cls, \
-             patch("src.agents.retraining_agent.llm") as mock_llm, \
+             patch("src.agents.retraining_agent._get_llm") as mock_llm, \
              patch("src.agents.retraining_agent.RETRAINING_RUNS"):
 
             # Setup mocks
@@ -71,7 +71,7 @@ class TestRetrainingAgent:
             }
             mock_trainer_cls.return_value = mock_trainer
 
-            mock_llm.invoke.return_value = MagicMock(content="DEPLOY — new model is better.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="DEPLOY — new model is better.")
 
             state = _base_state(performance_degraded=True, current_f1=0.78, baseline_f1=0.88)
             result = retraining_agent(state)
@@ -86,7 +86,7 @@ class TestRetrainingAgent:
         with patch("src.agents.retraining_agent.TicketDataProcessor") as mock_proc_cls, \
              patch("src.agents.retraining_agent.TicketClassifier") as mock_model_cls, \
              patch("src.agents.retraining_agent.Trainer") as mock_trainer_cls, \
-             patch("src.agents.retraining_agent.llm") as mock_llm, \
+             patch("src.agents.retraining_agent._get_llm") as mock_llm, \
              patch("src.agents.retraining_agent.RETRAINING_RUNS"):
 
             mock_proc = MagicMock()
@@ -104,7 +104,7 @@ class TestRetrainingAgent:
             }
             mock_trainer_cls.return_value = mock_trainer
 
-            mock_llm.invoke.return_value = MagicMock(content="DEPLOY — model adapted to new distribution.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="DEPLOY — model adapted to new distribution.")
 
             state = _base_state(drift_detected=True, drift_score=0.45)
             result = retraining_agent(state)
@@ -117,7 +117,7 @@ class TestRetrainingAgent:
         with patch("src.agents.retraining_agent.TicketDataProcessor") as mock_proc_cls, \
              patch("src.agents.retraining_agent.TicketClassifier") as mock_model_cls, \
              patch("src.agents.retraining_agent.Trainer") as mock_trainer_cls, \
-             patch("src.agents.retraining_agent.llm") as mock_llm, \
+             patch("src.agents.retraining_agent._get_llm") as mock_llm, \
              patch("src.agents.retraining_agent.RETRAINING_RUNS"):
 
             mock_proc = MagicMock()
@@ -131,7 +131,7 @@ class TestRetrainingAgent:
             mock_trainer.train.return_value = {"best_f1": 0.89, "model_path": "models/best", "mlflow_run_id": "run-789"}
             mock_trainer_cls.return_value = mock_trainer
 
-            mock_llm.invoke.return_value = MagicMock(content="DEPLOY")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="DEPLOY")
 
             state = _base_state(performance_degraded=True)
             retraining_agent(state)
@@ -144,7 +144,7 @@ class TestRetrainingAgent:
         with patch("src.agents.retraining_agent.TicketDataProcessor") as mock_proc_cls, \
              patch("src.agents.retraining_agent.TicketClassifier") as mock_model_cls, \
              patch("src.agents.retraining_agent.Trainer") as mock_trainer_cls, \
-             patch("src.agents.retraining_agent.llm") as mock_llm, \
+             patch("src.agents.retraining_agent._get_llm") as mock_llm, \
              patch("src.agents.retraining_agent.RETRAINING_RUNS"):
 
             mock_proc = MagicMock()
@@ -159,7 +159,7 @@ class TestRetrainingAgent:
             mock_trainer.train.return_value = {"best_f1": 0.85, "model_path": "models/best", "mlflow_run_id": "run-000"}
             mock_trainer_cls.return_value = mock_trainer
 
-            mock_llm.invoke.return_value = MagicMock(content="DEPLOY")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="DEPLOY")
 
             state = _base_state(performance_degraded=True)
             result = retraining_agent(state)
@@ -187,7 +187,7 @@ class TestRetrainingAgent:
         with patch("src.agents.retraining_agent.TicketDataProcessor") as mock_proc_cls, \
              patch("src.agents.retraining_agent.TicketClassifier") as mock_model_cls, \
              patch("src.agents.retraining_agent.Trainer") as mock_trainer_cls, \
-             patch("src.agents.retraining_agent.llm") as mock_llm, \
+             patch("src.agents.retraining_agent._get_llm") as mock_llm, \
              patch("src.agents.retraining_agent.RETRAINING_RUNS") as mock_counter:
 
             mock_proc = MagicMock()
@@ -197,7 +197,7 @@ class TestRetrainingAgent:
             mock_trainer = MagicMock()
             mock_trainer.train.return_value = {"best_f1": 0.90, "model_path": "models/best", "mlflow_run_id": "x"}
             mock_trainer_cls.return_value = mock_trainer
-            mock_llm.invoke.return_value = MagicMock(content="DEPLOY")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="DEPLOY")
 
             state = _base_state(performance_degraded=True)
             retraining_agent(state)

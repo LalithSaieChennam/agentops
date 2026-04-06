@@ -50,7 +50,7 @@ class TestDataQualityAgent:
 
         with patch("src.agents.data_quality_agent.get_recent_predictions") as mock_get, \
              patch("src.agents.data_quality_agent.DriftDetector") as mock_detector_cls, \
-             patch("src.agents.data_quality_agent.llm") as mock_llm, \
+             patch("src.agents.data_quality_agent._get_llm") as mock_llm, \
              patch("src.agents.data_quality_agent.DATA_DRIFT_SCORE"), \
              patch("src.agents.data_quality_agent.DATA_DRIFT_DETECTED"), \
              patch("src.agents.data_quality_agent.DRIFTED_FEATURES_COUNT"):
@@ -59,7 +59,7 @@ class TestDataQualityAgent:
             mock_detector = MagicMock()
             mock_detector.check_drift.return_value = mock_drift_report
             mock_detector_cls.get_instance.return_value = mock_detector
-            mock_llm.invoke.return_value = MagicMock(content="Significant drift detected in confidence and label distribution.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Significant drift detected in confidence and label distribution.")
 
             state = _base_state()
             result = data_quality_agent(state)
@@ -81,7 +81,7 @@ class TestDataQualityAgent:
 
         with patch("src.agents.data_quality_agent.get_recent_predictions") as mock_get, \
              patch("src.agents.data_quality_agent.DriftDetector") as mock_detector_cls, \
-             patch("src.agents.data_quality_agent.llm") as mock_llm, \
+             patch("src.agents.data_quality_agent._get_llm") as mock_llm, \
              patch("src.agents.data_quality_agent.DATA_DRIFT_SCORE"), \
              patch("src.agents.data_quality_agent.DATA_DRIFT_DETECTED"), \
              patch("src.agents.data_quality_agent.DRIFTED_FEATURES_COUNT"):
@@ -90,7 +90,7 @@ class TestDataQualityAgent:
             mock_detector = MagicMock()
             mock_detector.check_drift.return_value = mock_drift_report
             mock_detector_cls.get_instance.return_value = mock_detector
-            mock_llm.invoke.return_value = MagicMock(content="No significant drift detected.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="No significant drift detected.")
 
             state = _base_state()
             result = data_quality_agent(state)
@@ -111,7 +111,7 @@ class TestDataQualityAgent:
 
         with patch("src.agents.data_quality_agent.get_recent_predictions") as mock_get, \
              patch("src.agents.data_quality_agent.DriftDetector") as mock_detector_cls, \
-             patch("src.agents.data_quality_agent.llm") as mock_llm, \
+             patch("src.agents.data_quality_agent._get_llm") as mock_llm, \
              patch("src.agents.data_quality_agent.DATA_DRIFT_SCORE") as mock_drift_gauge, \
              patch("src.agents.data_quality_agent.DATA_DRIFT_DETECTED") as mock_detected_gauge, \
              patch("src.agents.data_quality_agent.DRIFTED_FEATURES_COUNT") as mock_count_gauge:
@@ -120,7 +120,7 @@ class TestDataQualityAgent:
             mock_detector = MagicMock()
             mock_detector.check_drift.return_value = mock_drift_report
             mock_detector_cls.get_instance.return_value = mock_detector
-            mock_llm.invoke.return_value = MagicMock(content="Drift found.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Drift found.")
 
             state = _base_state()
             data_quality_agent(state)
@@ -155,7 +155,7 @@ class TestDataQualityAgent:
 
         with patch("src.agents.data_quality_agent.get_recent_predictions") as mock_get, \
              patch("src.agents.data_quality_agent.DriftDetector") as mock_detector_cls, \
-             patch("src.agents.data_quality_agent.llm") as mock_llm, \
+             patch("src.agents.data_quality_agent._get_llm") as mock_llm, \
              patch("src.agents.data_quality_agent.DATA_DRIFT_SCORE"), \
              patch("src.agents.data_quality_agent.DATA_DRIFT_DETECTED"), \
              patch("src.agents.data_quality_agent.DRIFTED_FEATURES_COUNT"):
@@ -164,12 +164,12 @@ class TestDataQualityAgent:
             mock_detector = MagicMock()
             mock_detector.check_drift.return_value = mock_drift_report
             mock_detector_cls.get_instance.return_value = mock_detector
-            mock_llm.invoke.return_value = MagicMock(content="Technical ticket surge detected.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Technical ticket surge detected.")
 
             state = _base_state()
             result = data_quality_agent(state)
 
             # LLM was called exactly once
-            mock_llm.invoke.assert_called_once()
+            mock_llm.return_value.invoke.assert_called_once()
             # The summary came from the LLM
             assert result["drift_report_summary"] == "Technical ticket surge detected."

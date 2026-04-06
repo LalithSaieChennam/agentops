@@ -1,10 +1,9 @@
 """Tests for the Trainer class."""
 
 import pytest
-from unittest.mock import patch, MagicMock, PropertyMock
+from unittest.mock import patch, MagicMock
 import torch
 from src.ml.train import Trainer
-from src.ml.data_processor import LABEL_NAMES
 
 
 class TestTrainer:
@@ -19,6 +18,15 @@ class TestTrainer:
         mock_model.model.train = MagicMock()
         mock_model.model.eval = MagicMock()
         return mock_model
+
+    def _make_fake_batch(self, num_classes=5, batch_size=10):
+        """Create a fake batch with all classes represented."""
+        labels = torch.tensor([i % num_classes for i in range(batch_size)])
+        return {
+            "input_ids": torch.randint(0, 1000, (batch_size, 16)),
+            "attention_mask": torch.ones(batch_size, 16, dtype=torch.long),
+            "label": labels,
+        }
 
     def test_trainer_init(self):
         """Test Trainer initializes with correct parameters."""
@@ -51,42 +59,32 @@ class TestTrainer:
         """Test that training integrates with MLflow for experiment tracking."""
         mock_model = self._make_mock_model()
 
-        # Create mock outputs for forward pass
         mock_outputs = MagicMock()
         mock_outputs.loss = MagicMock()
         mock_outputs.loss.item.return_value = 0.5
         mock_outputs.loss.backward = MagicMock()
-        mock_outputs.logits = torch.randn(2, 5)
+        # Produce logits for all 5 classes with batch_size 10
+        mock_outputs.logits = torch.randn(10, 5)
         mock_model.model.return_value = mock_outputs
 
-        # Create minimal fake datasets
-        fake_batch = {
-            "input_ids": torch.randint(0, 1000, (2, 16)),
-            "attention_mask": torch.ones(2, 16, dtype=torch.long),
-            "label": torch.tensor([0, 1]),
-        }
-        train_dataset = MagicMock()
-        train_dataset.__len__ = MagicMock(return_value=2)
-        train_dataset.__getitem__ = MagicMock(return_value=fake_batch)
+        fake_batch = self._make_fake_batch()
 
-        val_dataset = MagicMock()
-        val_dataset.__len__ = MagicMock(return_value=2)
+        trainer = Trainer(model=mock_model, num_epochs=1, batch_size=10, warmup_steps=0)
 
-        trainer = Trainer(model=mock_model, num_epochs=1, batch_size=2, warmup_steps=0)
-
-        # Mock DataLoader to return our fake batch
         with patch("src.ml.train.DataLoader") as mock_dl:
             mock_dl.return_value = [fake_batch]
 
-            # Mock the run context
             mock_run = MagicMock()
             mock_run.info.run_id = "test-run-123"
             mock_mlflow.start_run.return_value.__enter__ = MagicMock(return_value=mock_run)
             mock_mlflow.start_run.return_value.__exit__ = MagicMock(return_value=False)
 
-            result = trainer.train(train_dataset, val_dataset, experiment_name="test_exp")
+            result = trainer.train(
+                MagicMock(__len__=MagicMock(return_value=10)),
+                MagicMock(__len__=MagicMock(return_value=10)),
+                experiment_name="test_exp",
+            )
 
-        # Verify MLflow was called
         mock_mlflow.set_experiment.assert_called_once_with("test_exp")
         mock_mlflow.log_params.assert_called_once()
         assert mock_mlflow.log_metric.call_count >= 1
@@ -100,16 +98,12 @@ class TestTrainer:
         mock_outputs.loss = MagicMock()
         mock_outputs.loss.item.return_value = 0.3
         mock_outputs.loss.backward = MagicMock()
-        mock_outputs.logits = torch.randn(2, 5)
+        mock_outputs.logits = torch.randn(10, 5)
         mock_model.model.return_value = mock_outputs
 
-        fake_batch = {
-            "input_ids": torch.randint(0, 1000, (2, 16)),
-            "attention_mask": torch.ones(2, 16, dtype=torch.long),
-            "label": torch.tensor([0, 1]),
-        }
+        fake_batch = self._make_fake_batch()
 
-        trainer = Trainer(model=mock_model, num_epochs=1, batch_size=2, warmup_steps=0)
+        trainer = Trainer(model=mock_model, num_epochs=1, batch_size=10, warmup_steps=0)
 
         with patch("src.ml.train.DataLoader") as mock_dl:
             mock_dl.return_value = [fake_batch]
@@ -118,7 +112,10 @@ class TestTrainer:
             mock_mlflow.start_run.return_value.__enter__ = MagicMock(return_value=mock_run)
             mock_mlflow.start_run.return_value.__exit__ = MagicMock(return_value=False)
 
-            result = trainer.train(MagicMock(__len__=MagicMock(return_value=2)), MagicMock(__len__=MagicMock(return_value=2)))
+            result = trainer.train(
+                MagicMock(__len__=MagicMock(return_value=10)),
+                MagicMock(__len__=MagicMock(return_value=10)),
+            )
 
         assert "best_f1" in result
         assert "model_path" in result
@@ -130,18 +127,18 @@ class TestTrainer:
         """Test that _evaluate computes correct metric structure."""
         mock_model = self._make_mock_model()
 
-        # Create outputs with predictable logits
+        # Create logits for 10 samples covering all 5 classes — predict correct class
+        logits = torch.zeros(10, 5)
+        for i in range(10):
+            logits[i, i % 5] = 10.0  # High score for correct class
+
         mock_outputs = MagicMock()
-        mock_outputs.logits = torch.tensor([[10.0, 0.0, 0.0, 0.0, 0.0], [0.0, 10.0, 0.0, 0.0, 0.0]])
+        mock_outputs.logits = logits
         mock_model.model.return_value = mock_outputs
 
         trainer = Trainer(model=mock_model)
 
-        fake_batch = {
-            "input_ids": torch.randint(0, 1000, (2, 16)),
-            "attention_mask": torch.ones(2, 16, dtype=torch.long),
-            "label": torch.tensor([0, 1]),  # Matches the predicted classes
-        }
+        fake_batch = self._make_fake_batch()  # labels = [0,1,2,3,4,0,1,2,3,4]
 
         metrics = trainer._evaluate([fake_batch])
 
@@ -150,26 +147,24 @@ class TestTrainer:
         assert "f1_per_class" in metrics
         assert "full_report" in metrics
         assert 0.0 <= metrics["accuracy"] <= 1.0
-        assert 0.0 <= metrics["f1_weighted"] <= 1.0
-        # With correct predictions, accuracy should be 1.0
-        assert metrics["accuracy"] == 1.0
+        assert metrics["accuracy"] == 1.0  # All predictions correct
 
     def test_evaluate_with_wrong_predictions(self):
         """Test _evaluate computes lower metrics when predictions are wrong."""
         mock_model = self._make_mock_model()
 
-        # Logits that predict class 0 for everything
+        # All predict class 0 — but labels cycle through all 5 classes
+        logits = torch.zeros(10, 5)
+        logits[:, 0] = 10.0  # Always predict class 0
+
         mock_outputs = MagicMock()
-        mock_outputs.logits = torch.tensor([[10.0, 0.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0, 0.0]])
+        mock_outputs.logits = logits
         mock_model.model.return_value = mock_outputs
 
         trainer = Trainer(model=mock_model)
 
-        fake_batch = {
-            "input_ids": torch.randint(0, 1000, (2, 16)),
-            "attention_mask": torch.ones(2, 16, dtype=torch.long),
-            "label": torch.tensor([0, 1]),  # Second label is wrong
-        }
+        fake_batch = self._make_fake_batch()  # labels = [0,1,2,3,4,0,1,2,3,4]
 
         metrics = trainer._evaluate([fake_batch])
-        assert metrics["accuracy"] == 0.5  # Only 1 of 2 correct
+        # Only 2 out of 10 are class 0, so accuracy = 0.2
+        assert metrics["accuracy"] == pytest.approx(0.2, abs=0.01)

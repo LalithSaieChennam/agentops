@@ -49,7 +49,7 @@ class TestModelEvalAgent:
     def test_detects_degradation(self):
         """Test agent detects model performance degradation."""
         with patch("src.agents.model_eval_agent.PerformanceTracker") as mock_tracker_cls, \
-             patch("src.agents.model_eval_agent.llm") as mock_llm, \
+             patch("src.agents.model_eval_agent._get_llm") as mock_llm, \
              patch("src.agents.model_eval_agent.MODEL_F1_SCORE"), \
              patch("src.agents.model_eval_agent.MODEL_ACCURACY"):
 
@@ -63,7 +63,7 @@ class TestModelEvalAgent:
                 "sample_count": 500,
             }
             mock_tracker_cls.get_instance.return_value = mock_tracker
-            mock_llm.invoke.return_value = MagicMock(content="RETRAIN — F1 dropped 10%.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="RETRAIN — F1 dropped 10%.")
 
             state = _base_state(drift_detected=True, drift_score=0.4)
             result = model_eval_agent(state)
@@ -76,7 +76,7 @@ class TestModelEvalAgent:
     def test_no_degradation_when_healthy(self):
         """Test agent reports no degradation when model is performing well."""
         with patch("src.agents.model_eval_agent.PerformanceTracker") as mock_tracker_cls, \
-             patch("src.agents.model_eval_agent.llm") as mock_llm, \
+             patch("src.agents.model_eval_agent._get_llm") as mock_llm, \
              patch("src.agents.model_eval_agent.MODEL_F1_SCORE"), \
              patch("src.agents.model_eval_agent.MODEL_ACCURACY"):
 
@@ -90,7 +90,7 @@ class TestModelEvalAgent:
                 "sample_count": 500,
             }
             mock_tracker_cls.get_instance.return_value = mock_tracker
-            mock_llm.invoke.return_value = MagicMock(content="NO ACTION — model is healthy.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="NO ACTION — model is healthy.")
 
             state = _base_state()
             result = model_eval_agent(state)
@@ -101,7 +101,7 @@ class TestModelEvalAgent:
     def test_cross_references_drift_data(self):
         """Test that the LLM prompt includes drift data from Agent 1."""
         with patch("src.agents.model_eval_agent.PerformanceTracker") as mock_tracker_cls, \
-             patch("src.agents.model_eval_agent.llm") as mock_llm, \
+             patch("src.agents.model_eval_agent._get_llm") as mock_llm, \
              patch("src.agents.model_eval_agent.MODEL_F1_SCORE"), \
              patch("src.agents.model_eval_agent.MODEL_ACCURACY"):
 
@@ -111,20 +111,20 @@ class TestModelEvalAgent:
                 "f1_drop": 0.01, "confidence_mean": 0.9, "sample_count": 300,
             }
             mock_tracker_cls.get_instance.return_value = mock_tracker
-            mock_llm.invoke.return_value = MagicMock(content="MONITOR — drift present but F1 stable.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="MONITOR — drift present but F1 stable.")
 
             state = _base_state(drift_detected=True, drift_score=0.35, drifted_features=["confidence"])
             result = model_eval_agent(state)
 
             # Check that the LLM was called with drift info in the prompt
-            call_args = mock_llm.invoke.call_args[0][0][0].content
+            call_args = mock_llm.return_value.invoke.call_args[0][0][0].content
             assert "True" in call_args  # drift_detected
             assert "0.35" in call_args  # drift_score
 
     def test_updates_prometheus_metrics(self):
         """Test that Prometheus metrics are updated."""
         with patch("src.agents.model_eval_agent.PerformanceTracker") as mock_tracker_cls, \
-             patch("src.agents.model_eval_agent.llm") as mock_llm, \
+             patch("src.agents.model_eval_agent._get_llm") as mock_llm, \
              patch("src.agents.model_eval_agent.MODEL_F1_SCORE") as mock_f1, \
              patch("src.agents.model_eval_agent.MODEL_ACCURACY"):
 
@@ -134,7 +134,7 @@ class TestModelEvalAgent:
                 "f1_drop": -0.01, "confidence_mean": 0.91, "sample_count": 500,
             }
             mock_tracker_cls.get_instance.return_value = mock_tracker
-            mock_llm.invoke.return_value = MagicMock(content="Healthy.")
+            mock_llm.return_value.invoke.return_value = MagicMock(content="Healthy.")
 
             state = _base_state()
             model_eval_agent(state)

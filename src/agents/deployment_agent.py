@@ -17,7 +17,14 @@ from src.agents.state import AgentState
 
 logger = structlog.get_logger()
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+_llm = None
+
+
+def _get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    return _llm
 
 
 def deployment_agent(state: AgentState) -> AgentState:
@@ -90,7 +97,7 @@ def deployment_agent(state: AgentState) -> AgentState:
 
 def _generate_final_summary(state: AgentState):
     """Use LLM to generate a human-readable pipeline summary."""
-    summary = llm.invoke([HumanMessage(content=f"""
+    summary = _get_llm().invoke([HumanMessage(content=f"""
 Summarize this MLOps pipeline run in 3-4 sentences for a status dashboard:
 
 - Data Drift: {state.get('drift_report_summary', 'N/A')}

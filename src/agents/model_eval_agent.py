@@ -14,7 +14,14 @@ from src.agents.state import AgentState
 
 logger = structlog.get_logger()
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+_llm = None
+
+
+def _get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    return _llm
 
 
 def model_eval_agent(state: AgentState) -> AgentState:
@@ -38,7 +45,7 @@ def model_eval_agent(state: AgentState) -> AgentState:
             MODEL_ACCURACY.set(degradation["current_accuracy"])
 
         # LLM decides: is retraining needed?
-        decision = llm.invoke([HumanMessage(content=f"""
+        decision = _get_llm().invoke([HumanMessage(content=f"""
 You are an MLOps evaluation agent. Based on these metrics, decide if
 the model needs retraining. Reply with a JSON object.
 

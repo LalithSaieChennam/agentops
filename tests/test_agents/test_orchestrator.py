@@ -1,7 +1,7 @@
 """Tests for the LangGraph orchestrator."""
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, AsyncMock
 from src.agents.state import AgentState
 from src.agents.orchestrator import should_retrain, build_pipeline
 
@@ -91,37 +91,37 @@ class TestRunPipeline:
     @pytest.mark.asyncio
     async def test_run_pipeline_initializes_state(self):
         """Test that run_pipeline creates proper initial state."""
+        mock_result = {
+            "trigger_reason": "manual",
+            "triggered_at": "2024-01-01",
+            "drift_detected": False,
+            "drift_score": 0.0,
+            "drifted_features": [],
+            "drift_report_summary": "",
+            "performance_degraded": False,
+            "current_f1": 0.88,
+            "baseline_f1": 0.85,
+            "f1_drop": 0.0,
+            "eval_summary": "",
+            "retraining_triggered": False,
+            "new_model_f1": 0.0,
+            "new_model_path": "",
+            "retraining_summary": "",
+            "mlflow_run_id": "",
+            "deployment_action": "none",
+            "deployed_model_version": "",
+            "deployment_summary": "",
+            "pipeline_decision": "",
+            "final_summary": "All good.",
+            "errors": [],
+        }
+
         with patch("src.agents.orchestrator.pipeline") as mock_pipeline, \
              patch("src.agents.orchestrator.AGENT_RUNS_TOTAL") as mock_counter, \
              patch("src.agents.orchestrator.AGENT_PIPELINE_DURATION"), \
              patch("src.agents.orchestrator.log_pipeline_run"):
 
-            # Mock pipeline to return a completed state
-            mock_result = {
-                "trigger_reason": "manual",
-                "triggered_at": "2024-01-01",
-                "drift_detected": False,
-                "drift_score": 0.0,
-                "drifted_features": [],
-                "drift_report_summary": "",
-                "performance_degraded": False,
-                "current_f1": 0.88,
-                "baseline_f1": 0.85,
-                "f1_drop": 0.0,
-                "eval_summary": "",
-                "retraining_triggered": False,
-                "new_model_f1": 0.0,
-                "new_model_path": "",
-                "retraining_summary": "",
-                "mlflow_run_id": "",
-                "deployment_action": "none",
-                "deployed_model_version": "",
-                "deployment_summary": "",
-                "pipeline_decision": "",
-                "final_summary": "All good.",
-                "errors": [],
-            }
-            mock_pipeline.ainvoke.return_value = mock_result
+            mock_pipeline.ainvoke = AsyncMock(return_value=mock_result)
 
             from src.agents.orchestrator import run_pipeline
             result = await run_pipeline(trigger_reason="manual")

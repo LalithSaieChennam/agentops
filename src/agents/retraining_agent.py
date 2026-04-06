@@ -17,7 +17,14 @@ from src.config import settings
 
 logger = structlog.get_logger()
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+_llm = None
+
+
+def _get_llm():
+    global _llm
+    if _llm is None:
+        _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    return _llm
 
 
 def retraining_agent(state: AgentState) -> AgentState:
@@ -67,7 +74,7 @@ def retraining_agent(state: AgentState) -> AgentState:
         results = trainer.train(train_dataset, val_dataset, experiment_name="agentops_retraining")
 
         # LLM evaluates the training results
-        evaluation = llm.invoke([HumanMessage(content=f"""
+        evaluation = _get_llm().invoke([HumanMessage(content=f"""
 You are an MLOps retraining agent. Evaluate these training results:
 
 - New model F1: {results['best_f1']:.4f}

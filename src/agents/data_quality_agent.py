@@ -16,7 +16,15 @@ from src.config import settings
 
 logger = structlog.get_logger()
 
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+_llm = None
+
+
+def _get_llm():
+    """Lazy-initialize the LLM to avoid import-time API key validation."""
+    global _llm
+    if _llm is None:
+        _llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+    return _llm
 
 
 def data_quality_agent(state: AgentState) -> AgentState:
@@ -50,7 +58,7 @@ def data_quality_agent(state: AgentState) -> AgentState:
         DRIFTED_FEATURES_COUNT.set(len(drift_report.drifted_columns))
 
         # Use LLM to interpret the drift results
-        interpretation = llm.invoke([HumanMessage(content=f"""
+        interpretation = _get_llm().invoke([HumanMessage(content=f"""
 You are an MLOps monitoring agent. Analyze this data drift report and provide
 a concise summary (2-3 sentences) of what's happening:
 
