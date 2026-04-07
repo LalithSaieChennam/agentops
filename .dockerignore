@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.eggs
+dist
+build
+
+# Virtual environments
+venv
+.venv
+env
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# MLflow local runs
+mlruns
+
+# Models (built inside container or mounted)
+models/best
+models/production
+
+# Data
+data/raw
+data/processed
+
+# Tests & docs (not needed in prod image)
+tests
+LEARNING_GUIDE.md
+AgentOps_Project_Guide.md
+
+# Misc
+.env
+.claude
+*.log

@@ -53,3 +53,13 @@ coverage.xml
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude
+.claude/
+
+# Logs
+*.log
+
+# Learning guides (personal notes)
+LEARNING_GUIDE.md
+AgentOps_Project_Guide.md

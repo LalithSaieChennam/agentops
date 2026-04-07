@@ -8,12 +8,37 @@ from sklearn.metrics import classification_report, f1_score
 import mlflow
 import structlog
 from typing import Dict, Any
+import urllib.request
+import urllib.error
 
 from src.ml.model import TicketClassifier
 from src.ml.data_processor import LABEL_NAMES
 from src.config import settings
 
 logger = structlog.get_logger()
+
+
+def _setup_mlflow_tracking(tracking_uri: str) -> str:
+    """Set up MLflow tracking, falling back to local storage if server is unreachable.
+
+    Returns the actual tracking URI being used.
+    """
+    # Try to reach the remote MLflow server
+    try:
+        urllib.request.urlopen(tracking_uri, timeout=3)
+        mlflow.set_tracking_uri(tracking_uri)
+        logger.info("mlflow_tracking", uri=tracking_uri, mode="remote")
+        return tracking_uri
+    except (urllib.error.URLError, ConnectionError, OSError):
+        local_uri = "file:./mlruns"
+        mlflow.set_tracking_uri(local_uri)
+        logger.warning(
+            "mlflow_fallback_to_local",
+            remote_uri=tracking_uri,
+            local_uri=local_uri,
+            reason="MLflow server unreachable, using local file tracking",
+        )
+        return local_uri
 
 
 class Trainer:
@@ -41,7 +66,7 @@ class Trainer:
 
         Returns dict with final metrics and model path.
         """
-        mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
+        actual_uri = _setup_mlflow_tracking(settings.mlflow_tracking_uri)
         mlflow.set_experiment(experiment_name)
 
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
@@ -126,10 +151,13 @@ class Trainer:
                 all_preds.extend(preds.cpu().tolist())
                 all_labels.extend(batch["label"].tolist())
 
+        all_label_ids = list(range(len(LABEL_NAMES)))
         report = classification_report(
             all_labels, all_preds,
-            target_names=[LABEL_NAMES[i] for i in range(len(LABEL_NAMES))],
+            labels=all_label_ids,
+            target_names=[LABEL_NAMES[i] for i in all_label_ids],
             output_dict=True,
+            zero_division=0,
         )
 
         return {
@@ -137,7 +165,7 @@ class Trainer:
             "f1_weighted": report["weighted avg"]["f1-score"],
             "f1_per_class": {
                 LABEL_NAMES[i]: report[LABEL_NAMES[i]]["f1-score"]
-                for i in range(len(LABEL_NAMES))
+                for i in all_label_ids
             },
             "full_report": report,
         }
