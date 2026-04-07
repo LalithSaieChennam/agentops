@@ -1,6 +1,6 @@
 # AgentOps - Agentic MLOps Pipeline
 
-[![CI](https://github.com/aabdel0181/agentops/actions/workflows/ci.yml/badge.svg)](https://github.com/aabdel0181/agentops/actions/workflows/ci.yml)
+[![CI](https://github.com/LalithSaieChennam/agentops/actions/workflows/ci.yml/badge.svg)](https://github.com/LalithSaieChennam/agentops/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-66%20passed-brightgreen.svg)]()
 [![Docker](https://img.shields.io/badge/docker-6%20containers-blue.svg)]()
@@ -76,7 +76,7 @@ AgentOps orchestrates 4 autonomous agents that monitor a deployed DistilBERT cla
 
 ```bash
 # Clone the repo
-git clone https://github.com/aabdel0181/agentops.git
+git clone https://github.com/LalithSaieChennam/agentops.git
 cd agentops
 
 # Set up environment
