@@ -1,9 +1,9 @@
 """Tests for the Model Evaluation Agent."""
 
-import pytest
-from unittest.mock import patch, MagicMock
-from src.agents.state import AgentState
+from unittest.mock import MagicMock, patch
+
 from src.agents.model_eval_agent import model_eval_agent
+from src.agents.state import AgentState
 
 
 def _base_state(**overrides) -> AgentState:
@@ -114,7 +114,7 @@ class TestModelEvalAgent:
             mock_llm.return_value.invoke.return_value = MagicMock(content="MONITOR — drift present but F1 stable.")
 
             state = _base_state(drift_detected=True, drift_score=0.35, drifted_features=["confidence"])
-            result = model_eval_agent(state)
+            model_eval_agent(state)
 
             # Check that the LLM was called with drift info in the prompt
             call_args = mock_llm.return_value.invoke.call_args[0][0][0].content

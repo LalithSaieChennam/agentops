@@ -1,7 +1,7 @@
 """Tests for the Retraining Agent."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from src.agents.retraining_agent import retraining_agent
 from src.agents.state import AgentState
 

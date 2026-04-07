@@ -1,9 +1,11 @@
 """Tests for the LangGraph orchestrator."""
 
+from unittest.mock import AsyncMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+
+from src.agents.orchestrator import build_pipeline, should_retrain
 from src.agents.state import AgentState
-from src.agents.orchestrator import should_retrain, build_pipeline
 
 
 class TestOrchestratorRouting:

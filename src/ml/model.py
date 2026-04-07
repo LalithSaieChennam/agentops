@@ -1,11 +1,12 @@
 """DistilBERT model wrapper for ticket classification."""
 
-import torch
-import torch.nn.functional as F
-from transformers import DistilBertForSequenceClassification
 from pathlib import Path
 from typing import Tuple
+
 import structlog
+import torch
+import torch.nn.functional as fn
+from transformers import DistilBertForSequenceClassification
 
 from src.config import settings
 
@@ -41,7 +42,7 @@ class TicketClassifier:
             input_ids = input_ids.to(self.device)
             attention_mask = attention_mask.to(self.device)
             outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
-            probabilities = F.softmax(outputs.logits, dim=-1)
+            probabilities = fn.softmax(outputs.logits, dim=-1)
             confidence, predicted = torch.max(probabilities, dim=-1)
 
         return (

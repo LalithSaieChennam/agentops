@@ -1,8 +1,8 @@
 """Tests for the prediction endpoint."""
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
 
 
 class TestPredictEndpoint:

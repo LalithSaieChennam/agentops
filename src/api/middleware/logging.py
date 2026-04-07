@@ -1,9 +1,10 @@
 """Structured request logging middleware."""
 
 import time
+
+import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-import structlog
 
 logger = structlog.get_logger()
 

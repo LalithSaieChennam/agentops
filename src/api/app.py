@@ -1,15 +1,16 @@
 """FastAPI application — serves predictions and agent controls."""
 
+from contextlib import asynccontextmanager
+
+import structlog
 from fastapi import FastAPI
 from prometheus_client import make_asgi_app
-from contextlib import asynccontextmanager
-import structlog
 
-from src.api.routes import predict, health, agents
-from src.ml.model import TicketClassifier
+from src.api.routes import agents, health, predict
 from src.ml.data_processor import TicketDataProcessor
+from src.ml.model import TicketClassifier
+from src.monitoring.metrics_exporter import MODEL_ACCURACY, MODEL_F1_SCORE, MODEL_VERSION
 from src.storage.database import init_db
-from src.monitoring.metrics_exporter import MODEL_F1_SCORE, MODEL_ACCURACY, MODEL_VERSION
 
 logger = structlog.get_logger()
 

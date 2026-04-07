@@ -9,10 +9,12 @@ Tools exposed:
 """
 
 from fastmcp import FastMCP
+
 from src.agents.orchestrator import run_pipeline
 from src.monitoring.drift_detector import DriftDetector
 from src.monitoring.performance_tracker import PerformanceTracker
-from src.storage.database import get_recent_predictions, get_pipeline_history as db_get_pipeline_history
+from src.storage.database import get_pipeline_history as db_get_pipeline_history
+from src.storage.database import get_recent_predictions
 
 mcp = FastMCP("AgentOps", description="Agentic MLOps Pipeline — monitor, retrain, and deploy ML models")
 

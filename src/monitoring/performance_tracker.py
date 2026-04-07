@@ -1,11 +1,12 @@
 """Track model performance metrics over time."""
 
 from collections import deque
-from datetime import datetime
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
-import structlog
-from typing import Dict, Optional
 from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, Optional
+
+import structlog
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 from src.config import settings
 

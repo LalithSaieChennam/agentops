@@ -4,15 +4,15 @@ This agent fetches recent production data, compares it against
 the reference distribution, and reports whether drift occurred.
 """
 
+import structlog
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-import structlog
 
-from src.monitoring.drift_detector import DriftDetector
-from src.monitoring.metrics_exporter import DATA_DRIFT_SCORE, DATA_DRIFT_DETECTED, DRIFTED_FEATURES_COUNT
 from src.agents.state import AgentState
-from src.storage.database import get_recent_predictions
 from src.config import settings
+from src.monitoring.drift_detector import DriftDetector
+from src.monitoring.metrics_exporter import DATA_DRIFT_DETECTED, DATA_DRIFT_SCORE, DRIFTED_FEATURES_COUNT
+from src.storage.database import get_recent_predictions
 
 logger = structlog.get_logger()
 

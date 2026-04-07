@@ -2,7 +2,6 @@
 
 from prometheus_client import Counter, Gauge, Histogram, Info
 
-
 # Prediction metrics
 PREDICTION_COUNT = Counter(
     "agentops_predictions_total",

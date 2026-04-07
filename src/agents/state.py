@@ -4,7 +4,7 @@ LangGraph agents communicate through this shared state object.
 Each agent reads from it and writes its results back.
 """
 
-from typing import TypedDict, Literal
+from typing import Literal, TypedDict
 
 
 class AgentState(TypedDict):

@@ -1,8 +1,9 @@
 """Tests for TicketClassifier model wrapper."""
 
-import pytest
+from unittest.mock import MagicMock, patch
+
 import torch
-from unittest.mock import patch, MagicMock
+
 from src.ml.model import TicketClassifier
 
 

@@ -1,14 +1,13 @@
 """Data loading and preprocessing for ticket classification."""
 
-import pandas as pd
-from datasets import load_dataset, Dataset
-from transformers import DistilBertTokenizer
-from sklearn.model_selection import train_test_split
 from typing import Tuple
-import torch
+
+import pandas as pd
+from datasets import Dataset, load_dataset
+from sklearn.model_selection import train_test_split
+from transformers import DistilBertTokenizer
 
 from src.config import settings
-
 
 LABEL_MAP = {
     "billing": 0,

@@ -1,9 +1,8 @@
 """Tests for drift detection."""
 
-import pytest
 import numpy as np
 import pandas as pd
-from unittest.mock import patch, MagicMock
+
 from src.monitoring.drift_detector import DriftDetector, DriftReport
 
 

@@ -1,9 +1,10 @@
 """MLflow model versioning and registry helper."""
 
+from typing import Any, Dict, Optional
+
 import mlflow
-from mlflow.tracking import MlflowClient
 import structlog
-from typing import Dict, Any, Optional
+from mlflow.tracking import MlflowClient
 
 from src.config import settings
 

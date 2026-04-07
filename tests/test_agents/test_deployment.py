@@ -1,9 +1,8 @@
 """Tests for the Deployment Agent."""
 
-import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
-from src.agents.deployment_agent import deployment_agent, _generate_final_summary
+from unittest.mock import MagicMock, patch
+
+from src.agents.deployment_agent import _generate_final_summary, deployment_agent
 from src.agents.state import AgentState
 
 
@@ -125,7 +124,9 @@ class TestDeploymentAgent:
     def test_generate_final_summary_calls_llm(self):
         """Test that _generate_final_summary uses LLM."""
         with patch("src.agents.deployment_agent._get_llm") as mock_llm:
-            mock_llm.return_value.invoke.return_value = MagicMock(content="Pipeline completed. No drift. Model healthy.")
+            mock_llm.return_value.invoke.return_value = MagicMock(
+                content="Pipeline completed. No drift. Model healthy."
+            )
 
             state = _base_state()
             _generate_final_summary(state)

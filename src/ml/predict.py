@@ -1,10 +1,11 @@
 """Inference pipeline for ticket classification."""
 
-import structlog
-from typing import Dict, Any
+from typing import Any, Dict
 
+import structlog
+
+from src.ml.data_processor import LABEL_NAMES, TicketDataProcessor
 from src.ml.model import TicketClassifier
-from src.ml.data_processor import TicketDataProcessor, LABEL_NAMES
 
 logger = structlog.get_logger()
 

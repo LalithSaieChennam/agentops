@@ -1,11 +1,12 @@
 """Data drift detection using Evidently AI (v0.7+ API)."""
 
-from evidently import Report
-from evidently.presets import DataDriftPreset
+from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
 import pandas as pd
 import structlog
-from typing import Dict, Any, Optional
-from dataclasses import dataclass
+from evidently import Report
+from evidently.presets import DataDriftPreset
 
 logger = structlog.get_logger()
 
@@ -95,7 +96,6 @@ class DriftDetector:
         # Parse the v0.7 output structure
         column_scores = {}
         drifted_columns = []
-        drifted_count = 0
         total_columns = 0
 
         for metric in result.get("metrics", []):
@@ -105,7 +105,7 @@ class DriftDetector:
             # DriftedColumnsCount gives overall drift summary
             if "DriftedColumnsCount" in metric_name:
                 value = metric.get("value", {})
-                drifted_count = value.get("count", 0)
+                value.get("count", 0)
                 drift_share = value.get("share", 0)
 
             # ValueDrift gives per-column drift scores

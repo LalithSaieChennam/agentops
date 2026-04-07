@@ -4,13 +4,13 @@ Computes accuracy, F1, precision, recall over a sliding window
 and determines if the model needs retraining.
 """
 
+import structlog
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-import structlog
 
-from src.monitoring.performance_tracker import PerformanceTracker
-from src.monitoring.metrics_exporter import MODEL_F1_SCORE, MODEL_ACCURACY
 from src.agents.state import AgentState
+from src.monitoring.metrics_exporter import MODEL_ACCURACY, MODEL_F1_SCORE
+from src.monitoring.performance_tracker import PerformanceTracker
 
 logger = structlog.get_logger()
 

@@ -6,15 +6,16 @@ and the overall execution flow.
 """
 
 from datetime import datetime
-from langgraph.graph import StateGraph, END
-import structlog
 
-from src.agents.state import AgentState
+import structlog
+from langgraph.graph import END, StateGraph
+
 from src.agents.data_quality_agent import data_quality_agent
+from src.agents.deployment_agent import deployment_agent
 from src.agents.model_eval_agent import model_eval_agent
 from src.agents.retraining_agent import retraining_agent
-from src.agents.deployment_agent import deployment_agent
-from src.monitoring.metrics_exporter import AGENT_RUNS_TOTAL, AGENT_PIPELINE_DURATION
+from src.agents.state import AgentState
+from src.monitoring.metrics_exporter import AGENT_PIPELINE_DURATION, AGENT_RUNS_TOTAL
 from src.storage.database import log_pipeline_run
 
 logger = structlog.get_logger()

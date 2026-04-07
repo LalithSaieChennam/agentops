@@ -1,8 +1,10 @@
 """Tests for the Trainer class."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 import torch
+
 from src.ml.train import Trainer
 
 
@@ -79,7 +81,7 @@ class TestTrainer:
             mock_mlflow.start_run.return_value.__enter__ = MagicMock(return_value=mock_run)
             mock_mlflow.start_run.return_value.__exit__ = MagicMock(return_value=False)
 
-            result = trainer.train(
+            trainer.train(
                 MagicMock(__len__=MagicMock(return_value=10)),
                 MagicMock(__len__=MagicMock(return_value=10)),
                 experiment_name="test_exp",

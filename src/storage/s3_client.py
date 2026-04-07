@@ -4,9 +4,10 @@ This module is used when deploying to AWS for storing model
 artifacts in S3 instead of local disk.
 """
 
-import structlog
 from pathlib import Path
 from typing import Optional
+
+import structlog
 
 logger = structlog.get_logger()
 

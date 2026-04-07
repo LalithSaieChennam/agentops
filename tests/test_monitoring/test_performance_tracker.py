@@ -1,6 +1,5 @@
 """Tests for performance tracking."""
 
-import pytest
 from src.monitoring.performance_tracker import PerformanceTracker
 
 

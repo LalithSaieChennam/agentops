@@ -1,12 +1,15 @@
 """Prediction endpoint with automatic monitoring."""
 
 import time
+
 from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.ml.data_processor import LABEL_NAMES
 from src.monitoring.metrics_exporter import (
-    PREDICTION_COUNT, PREDICTION_CONFIDENCE, PREDICTION_LATENCY,
+    PREDICTION_CONFIDENCE,
+    PREDICTION_COUNT,
+    PREDICTION_LATENCY,
 )
 
 router = APIRouter()

@@ -1,15 +1,16 @@
 """Evaluation metrics utilities for model assessment."""
 
+from typing import Any, Dict
+
+import structlog
 from sklearn.metrics import (
+    accuracy_score,
     classification_report,
     confusion_matrix,
     f1_score,
-    accuracy_score,
     precision_score,
     recall_score,
 )
-from typing import Dict, Any
-import structlog
 
 from src.ml.data_processor import LABEL_NAMES
 

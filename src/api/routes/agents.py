@@ -1,8 +1,9 @@
 """Agent pipeline control endpoints."""
 
+from typing import Optional
+
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
-from typing import Optional
 
 from src.agents.orchestrator import run_pipeline
 

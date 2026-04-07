@@ -1,19 +1,20 @@
 """Fine-tuning pipeline for DistilBERT ticket classifier."""
 
-import torch
-from torch.utils.data import DataLoader
-from torch.optim import AdamW
-from transformers import get_linear_schedule_with_warmup
-from sklearn.metrics import classification_report, f1_score
+import urllib.error
+import urllib.request
+from typing import Any, Dict
+
 import mlflow
 import structlog
-from typing import Dict, Any
-import urllib.request
-import urllib.error
+import torch
+from sklearn.metrics import classification_report
+from torch.optim import AdamW
+from torch.utils.data import DataLoader
+from transformers import get_linear_schedule_with_warmup
 
-from src.ml.model import TicketClassifier
-from src.ml.data_processor import LABEL_NAMES
 from src.config import settings
+from src.ml.data_processor import LABEL_NAMES
+from src.ml.model import TicketClassifier
 
 logger = structlog.get_logger()
 
@@ -66,7 +67,7 @@ class Trainer:
 
         Returns dict with final metrics and model path.
         """
-        actual_uri = _setup_mlflow_tracking(settings.mlflow_tracking_uri)
+        _setup_mlflow_tracking(settings.mlflow_tracking_uri)
         mlflow.set_experiment(experiment_name)
 
         train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)

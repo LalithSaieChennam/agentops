@@ -5,15 +5,16 @@ with zero-downtime swap and automatic rollback capability.
 """
 
 import shutil
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import structlog
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-import structlog
 
+from src.agents.state import AgentState
 from src.monitoring.metrics_exporter import DEPLOYMENT_SWAPS, MODEL_VERSION
 from src.monitoring.performance_tracker import PerformanceTracker
-from src.agents.state import AgentState
 
 logger = structlog.get_logger()
 

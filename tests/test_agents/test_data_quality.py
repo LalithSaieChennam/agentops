@@ -1,8 +1,9 @@
 """Tests for the Data Quality Agent."""
 
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
+
 from src.agents.state import AgentState
 
 
@@ -59,7 +60,9 @@ class TestDataQualityAgent:
             mock_detector = MagicMock()
             mock_detector.check_drift.return_value = mock_drift_report
             mock_detector_cls.get_instance.return_value = mock_detector
-            mock_llm.return_value.invoke.return_value = MagicMock(content="Significant drift detected in confidence and label distribution.")
+            mock_llm.return_value.invoke.return_value = MagicMock(
+                content="Significant drift detected in confidence and label distribution."
+            )
 
             state = _base_state()
             result = data_quality_agent(state)

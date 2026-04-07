@@ -1,10 +1,11 @@
 """PostgreSQL connection, tables, and queries for AgentOps."""
 
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, DateTime, Text, JSON
-from sqlalchemy.orm import sessionmaker, declarative_base
+
 import pandas as pd
 import structlog
+from sqlalchemy import JSON, Boolean, Column, DateTime, Float, Integer, String, Text, create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 from src.config import settings
 

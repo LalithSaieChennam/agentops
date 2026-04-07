@@ -4,16 +4,16 @@ Triggered by the evaluation agent's decision. Pulls new data,
 fine-tunes DistilBERT, evaluates the new model, and logs to MLflow.
 """
 
+import structlog
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-import structlog
 
-from src.ml.model import TicketClassifier
-from src.ml.train import Trainer
-from src.ml.data_processor import TicketDataProcessor
-from src.monitoring.metrics_exporter import RETRAINING_RUNS
 from src.agents.state import AgentState
 from src.config import settings
+from src.ml.data_processor import TicketDataProcessor
+from src.ml.model import TicketClassifier
+from src.ml.train import Trainer
+from src.monitoring.metrics_exporter import RETRAINING_RUNS
 
 logger = structlog.get_logger()
 
